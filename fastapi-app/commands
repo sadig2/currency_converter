@@ -1,0 +1,2 @@
+alembic revision --autogenerate -m "create user table"
+alembic downgrade base

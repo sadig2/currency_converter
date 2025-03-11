@@ -4,11 +4,12 @@ from fastapi import FastAPI
 
 from api import router as api_router
 from core.config import settings
-from core.models import db_helper
+from core.models import db_helper, Base, User
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
     # startup
     yield
     # shutdown
@@ -19,7 +20,7 @@ async def lifespan(app: FastAPI):
 main_app = FastAPI(
     lifespan=lifespan,
 )
-main_app.include_router(api_router, prefix=settings.api_prefix.prefix)
+main_app.include_router(api_router, prefix=settings.api.prefix)
 
 
 if __name__ == "__main__":
