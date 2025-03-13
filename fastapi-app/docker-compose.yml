@@ -1,5 +1,12 @@
 services:
-  pg:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  db:
     image: postgres
     environment:
       POSTGRES_USER: clanzu
@@ -7,7 +14,33 @@ services:
       POSTGRES_DB: clanzu_db
     ports:
       - "5432:5432"
+
+
+  web:
+    build: .
+    command: uvicorn main:main_app --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
   
+  celery-worker:
+    volumes:
+      - .:/app
+    build: .
+    command: celery -A celery_app worker --beat --loglevel=info
+    environment:
+      # PYTHONPATH: "/app"  # Critical for module resolution
+      REDIS_URL: "redis://redis:6379/0"
+    depends_on:
+      - redis
+    # user: "1000:1000"
+
   adminer:
     image: adminer
     ports:
@@ -21,3 +54,7 @@ services:
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
       - "5050:80"
+
+volumes:
+  postgres_data:
+  redis_data:

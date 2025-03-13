@@ -57,6 +57,7 @@ class Settings(BaseSettings):
     api: ApiPrefix = ApiPrefix()
     db: DatabaseConfig
     auth_jwt: AuthJWT = AuthJWT()
+    REDIS_URL: str = "redis://redis:6379/0"
 
 
 settings = Settings()
