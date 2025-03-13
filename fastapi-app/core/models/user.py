@@ -4,6 +4,7 @@ from .base import Base
 
 
 class User(Base):
-    username: Mapped[str] = mapped_column(unique=True)
-    foo: Mapped[int]
-    bar: Mapped[int]
+    username: Mapped[str]
+    email: Mapped[str] = mapped_column(unique=True)
+    password: Mapped[str]
+    active: Mapped[bool] = mapped_column(default=True)

@@ -1,2 +1,10 @@
 alembic revision --autogenerate -m "create user table"
 alembic downgrade base
+alembic upgrade head
+
+
+# Generate private key (4096-bit RSA)
+openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:4096
+
+# Generate public key from private key
+openssl rsa -pubout -in private.pem -out public.pem
