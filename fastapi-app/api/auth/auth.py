@@ -6,10 +6,9 @@ from core.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from core.models import db_helper
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from passlib.context import CryptContext
-from datetime import datetime, timedelta, timezone
+
 from auth.utils import encode_jwt, validate_password, hash_password
+from api.api_v1.crud.users import get_user, create_user
 
 
 router = APIRouter(prefix="/authenticate", tags=["auth"])
@@ -38,15 +37,6 @@ class UserResponse(BaseModel):
 class TokenInfo(BaseModel):
     access_token: str
     token_type: str
-
-
-# Security
-security = HTTPBearer()
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
-
-def get_password_hash(password: str):
-    return pwd_context.hash(password)
 
 
 @router.post("/login", response_model=TokenInfo)
@@ -80,15 +70,9 @@ async def login(
 async def register(
     user: UserCreate, db: AsyncSession = Depends(db_helper.get_session_getter)
 ):
-    existing_user = await db.execute(select(User).filter(User.email == user.email))
-    if existing_user.scalars().first():
+    existing_user = await get_user(db, user)
+    if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
 
-    hashed_password = hash_password(user.password)
-    db_user = User(
-        email=user.email, password=hashed_password.decode(), username=user.username
-    )
-    db.add(db_user)
-    await db.commit()
-    await db.refresh(db_user)
+    db_user = await create_user(db, user)
     return db_user

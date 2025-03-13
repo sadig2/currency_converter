@@ -4,14 +4,14 @@ from pydantic import ConfigDict
 
 class UserBase(BaseModel):
     username: str
-    foo: int
-    bar: int
+    email: str
 
 
 class UserCreate(UserBase):
-    pass
+    password: str
 
 
 class UserRead(UserBase):
     model_config = ConfigDict(from_attributes=True)
     id: int
+    active: bool
