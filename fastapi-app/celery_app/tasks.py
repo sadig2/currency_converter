@@ -28,17 +28,6 @@ async def fetch_rate(operation_type: str):
 async def update_exchange_rates():
     """Async Celery task to update exchange rates in Redis"""
     try:
-        # 1. Fetch exchange rates
-        # async with httpx.AsyncClient() as client:
-        #     response = await client.get(
-        #         "https://api.nbp.pl/api/exchangerates/tables/A/",
-        #         headers={"Accept": "application/json"},
-        #         timeout=10,
-        #     )
-        #     response.raise_for_status()
-        #     rates_data = response.json()[0]
-        #     effective_date = rates_data["effectiveDate"]
-        #     rates = rates_data["rates"]
 
         # Fetch all rate types concurrently
         mid1, mid2, trade = await asyncio.gather(
