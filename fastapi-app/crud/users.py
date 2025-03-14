@@ -22,11 +22,8 @@ async def get_user(session: AsyncSession, user: UserRead):
 async def get_user_by_username(session: AsyncSession, username: str):
     stmt = select(User).filter(User.username == username)
     result = await session.execute(stmt)
-    print("mm", result.first())
     user = result.scalars().first()
-    print(user.username)
-
-    return result.scalars().first()
+    return user
 
 
 async def get_all_users(session: AsyncSession) -> Sequence[User]:
@@ -37,7 +34,7 @@ async def get_all_users(session: AsyncSession) -> Sequence[User]:
 
 async def create_user(session: AsyncSession, user_create: UserCreate) -> User:
     user_dict = user_create.model_dump()
-    user_dict["password"] = hash_password(user_dict["password"]).decode()
+    user_dict["password"] = hash_password(user_dict["password"])
     user = User(**user_dict)
     session.add(user)
     await session.commit()
