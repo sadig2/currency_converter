@@ -1,5 +1,7 @@
 services:
   redis:
+    container_name: redis
+
     image: redis:alpine
     ports:
       - "6379:6379"
@@ -7,6 +9,8 @@ services:
       - redis_data:/data
 
   db:
+    container_name: db
+
     image: postgres
     environment:
       POSTGRES_USER: clanzu
@@ -17,8 +21,9 @@ services:
 
 
   web:
+    container_name: web
     build: .
-    command: uvicorn main:main_app --reload
+    command: uvicorn main:main_app --host 0.0.0.0 --port 8000 --reload
     volumes:
       - .:/app
     ports:
@@ -30,6 +35,7 @@ services:
       - redis
   
   celery-worker:
+    container_name: celery
     volumes:
       - .:/app
     build: .
@@ -41,19 +47,6 @@ services:
       - redis
     user: "1000:1000"
 
-  adminer:
-    image: adminer
-    ports:
-      - "8080:8080"
-  
-  pgadmin:
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.org
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    ports:
-      - "5050:80"
 
 volumes:
   postgres_data:

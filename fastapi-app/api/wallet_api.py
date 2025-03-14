@@ -6,7 +6,6 @@ from typing import List
 from pydantic import BaseModel
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import APIRouter, Depends
-from pytest import Session
 from core.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
