@@ -12,10 +12,10 @@ from core.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from core.models import db_helper
-from sqlalchemy.orm import joinedload
+from .auth_endpoint.auth import UserCreate
 from sqlalchemy.orm import selectinload
 from crud.wallet import create_currency, create_wallet
-import asyncio
+from .auth_endpoint.auth import get_current_token_payload, get_current_auth_user
 from redis.asyncio import Redis
 
 from core.models import Wallet, Currency
@@ -46,12 +46,15 @@ class CurrencyResponse(BaseModel):
 
 @router.post("/wallet", response_model=WalletResponse)
 async def create_wallet_endpoint(
-    wallet: WalletCreate, db: AsyncSession = Depends(db_helper.get_session_getter)
+    wallet: WalletCreate,
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    payload: dict = Depends(get_current_token_payload),
+    user: UserCreate = Depends(get_current_auth_user),
 ):
     stmt = await db.execute(select(User).where(User.id == wallet.user_id))
     user = stmt.scalar_one_or_none()
     if not user:
-        return HTTPException(
+        raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="no such user"
         )
     wallet = await create_wallet(session=db, user_id=wallet.user_id, name=wallet.name)
@@ -60,24 +63,33 @@ async def create_wallet_endpoint(
 
 @router.post("/currency", response_model=CurrencyResponse)
 async def create_currency_endpoint(
-    currency: CurrencyCreate, db: AsyncSession = Depends(db_helper.get_session_getter)
+    currency: CurrencyCreate,
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    payload: dict = Depends(get_current_token_payload),
+    user: UserCreate = Depends(get_current_auth_user),
 ):
     stmt = await db.execute(select(Wallet).where(Wallet.id == currency.wallet_id))
     wallet = stmt.scalar_one_or_none()
     if not wallet:
-        return HTTPException(detail="no such wallet")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="no such wallet"
+        )
     currency = await create_currency(
         session=db,
         wallet_id=currency.wallet_id,
         label=currency.label,
         amount=currency.amount,
     )
+    print(currency)
     return currency
 
 
 @router.get("/users/{username}/wallets", response_model=List[WalletResponse])
 async def get_wallets_by_username(
-    username: str, db: AsyncSession = Depends(db_helper.get_session_getter)
+    username: str,
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    payload: dict = Depends(get_current_token_payload),
+    user: UserCreate = Depends(get_current_auth_user),
 ):
     result = await db.execute(
         select(User)
@@ -92,7 +104,10 @@ async def get_wallets_by_username(
 
 @router.get("/wallets/{wallet_name}/currencies", response_model=List[CurrencyResponse])
 async def get_currencies_by_wallet_id(
-    wallet_name: str, db: AsyncSession = Depends(db_helper.get_session_getter)
+    wallet_name: str,
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    payload: dict = Depends(get_current_token_payload),
+    user: UserCreate = Depends(get_current_auth_user),
 ):
     result = await db.execute(
         select(Wallet)
@@ -122,12 +137,19 @@ async def get_rates():
     return normal_dict
 
 
+from .auth_endpoint.auth import UserCreate, get_current_auth_user
+
+
 @router.get(
     "/wallets/{wallet_name}/currencies_converted", response_model=List[CurrencyResponse]
 )
 async def get_currencies_by_wallet_id_convert(
-    wallet_name: str, db: AsyncSession = Depends(db_helper.get_session_getter)
+    wallet_name: str,
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    payload: dict = Depends(get_current_token_payload),
+    user: UserCreate = Depends(get_current_auth_user),
 ):
+    # iat = payload.get("iat")
     result = await db.execute(
         select(Wallet)
         .where(Wallet.name == wallet_name)

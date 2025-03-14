@@ -16,7 +16,7 @@ from crud.users import get_user, create_user, get_user_by_username
 router = APIRouter(prefix="/authenticate", tags=["auth"])
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/api/authenticate/login/",
+    tokenUrl="/api/authenticate/login/",
 )
 
 
