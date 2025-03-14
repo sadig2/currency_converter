@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 class User(Base):
     username: Mapped[str] = mapped_column(unique=True)
-    email: Mapped[str] = mapped_column(unique=True)
+    email: Mapped[str] = mapped_column(unique=True, nullable=True)
     password: Mapped[str]
     active: Mapped[bool] = mapped_column(default=True)
     wallets: Mapped[list["Wallet"]] = relationship(

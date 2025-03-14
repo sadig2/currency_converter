@@ -10,7 +10,7 @@ from sqlalchemy import select
 from core.models import db_helper
 
 from auth.utils import encode_jwt, validate_password, hash_password, decode_jwt
-from api.api_v1.crud.users import get_user, create_user, get_user_by_username
+from crud.users import get_user, create_user, get_user_by_username
 
 
 router = APIRouter(prefix="/authenticate", tags=["auth"])
@@ -32,7 +32,7 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(BaseModel):
-    email: str
+    username: str
     active: bool
 
     class Config:
@@ -88,9 +88,9 @@ async def login(
 async def register(
     user: UserCreate, db: AsyncSession = Depends(db_helper.get_session_getter)
 ):
-    existing_user = await get_user(db, user)
+    existing_user = await get_user_by_username(db, user.username)
     if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
+        raise HTTPException(status_code=400, detail="user already registered")
 
     db_user = await create_user(db, user)
     return db_user
