@@ -32,12 +32,8 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     beat_schedule={
-        # "debug-task": {
-        #     "task": "celery_app.tasks.debug_task",
-        #     "schedule": 3.0,  # Every 30 seconds
-        # },
         "money": {
-            "task": "celery_app.tasks.update_exchange_rates",
+            "task": "celery_app.tasks.sync",
             "schedule": 30.0,
         }
     },

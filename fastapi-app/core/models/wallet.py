@@ -12,7 +12,6 @@ if TYPE_CHECKING:
 
 class Wallet(Base):
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
     currency: Mapped[str] = mapped_column(String(3))
     amount: Mapped[Decimal] = mapped_column(
         Numeric(10, 2), default=0.00, nullable=False

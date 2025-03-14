@@ -39,7 +39,7 @@ services:
       REDIS_URL: "redis://redis:6379/0"
     depends_on:
       - redis
-    # user: "1000:1000"
+    user: "1000:1000"
 
   adminer:
     image: adminer
