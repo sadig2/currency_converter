@@ -8,15 +8,16 @@ from .base import Base
 
 if TYPE_CHECKING:
     from .user import User
+    from .currency import Currency
 
 
 class Wallet(Base):
 
-    currency: Mapped[str] = mapped_column(String(3))
-    amount: Mapped[Decimal] = mapped_column(
-        Numeric(10, 2), default=0.00, nullable=False
-    )
+    name: Mapped[str] = mapped_column(String(20))
     user_id: Mapped[int] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     user: Mapped["User"] = relationship(back_populates="wallets")
+    currencies: Mapped[list["Currency"]] = relationship(
+        "Currency", back_populates="wallet", cascade="all, delete-orphan"
+    )

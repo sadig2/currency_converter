@@ -8,7 +8,7 @@ if TYPE_CHECKING:
 
 
 class User(Base):
-    username: Mapped[str]
+    username: Mapped[str] = mapped_column(unique=True)
     email: Mapped[str] = mapped_column(unique=True)
     password: Mapped[str]
     active: Mapped[bool] = mapped_column(default=True)

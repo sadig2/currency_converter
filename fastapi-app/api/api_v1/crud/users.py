@@ -13,6 +13,12 @@ async def get_user(session: AsyncSession, user: UserRead):
     return result.scalars().first()
 
 
+async def get_user_by_username(session: AsyncSession, username: str):
+    stmt = select(User).filter(User.username == username)
+    result = await session.execute(stmt)
+    return result.scalars().first()
+
+
 async def get_all_users(session: AsyncSession) -> Sequence[User]:
     stmt = select(User).order_by(User.id)
     result = await session.scalars(stmt)

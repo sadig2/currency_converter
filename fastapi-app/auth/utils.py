@@ -17,6 +17,7 @@ def encode_jwt(
         expire = now + expire_time_delta
     else:
         expire = now + timedelta(minutes=expire_minutes)
+    print(expire, "expire")
     to_encode.update({"exp": expire, "iat": now})
     encoded = jwt.encode(to_encode, private_key, algorithm)
     return encoded
@@ -28,14 +29,18 @@ def decode_jwt(
     algorithm: str = settings.auth_jwt.algorithm,
 ):
     decoded = jwt.decode(token, public_key, algorithms=[algorithm])
+    print("decoded ", decoded)
     return decoded
 
 
 def hash_password(password: str) -> bytes:
     salt = bcrypt.gensalt()
     pwd_bytes: bytes = password.encode()
-    return bcrypt.hashpw(pwd_bytes, salt)
+    hashed_bytes = bcrypt.hashpw(pwd_bytes, salt)
+    return hashed_bytes.decode("utf-8")
 
 
-def validate_password(password: str, hashed_password: bytes) -> bool:
-    return bcrypt.checkpw(password=password.encode(), hashed_password=hashed_password)
+def validate_password(password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(
+        password=password.encode(), hashed_password=hashed_password.encode("utf-8")
+    )

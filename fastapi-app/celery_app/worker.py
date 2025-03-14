@@ -34,7 +34,7 @@ celery_app.conf.update(
     beat_schedule={
         "money": {
             "task": "celery_app.tasks.sync",
-            "schedule": 30.0,
+            "schedule": 90.0,
         }
     },
 )

@@ -30,7 +30,7 @@ class DatabaseHelper:
     async def get_session_getter(self):
         async with self.session_factory() as session:
             yield session
-            session.close()
+            await session.close()
 
 
 db_helper = DatabaseHelper(
