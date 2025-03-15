@@ -5,7 +5,7 @@ echo "meowka" > out.txt
 
 # Run database migrations
 # alembic downgrade base
-alembic revision --autogenerate -m "create user table"
+# alembic revision --autogenerate -m "create user table"
 alembic upgrade head
 
 # Load initial data

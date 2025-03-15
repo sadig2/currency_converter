@@ -148,7 +148,7 @@ async def get_wallets_by_username(
 
 
 async def get_mid_rates():
-    redis = Redis.from_url("redis://localhost:6379/0", socket_timeout=5)
+    redis = Redis.from_url("redis://redis:6379/0", socket_timeout=5)
     if not await redis.ping():
         logging.info("failed connection to redis")
         return
@@ -231,7 +231,7 @@ async def get_currencies_by_wallet_id(
 
 
 async def get_rates():
-    redis = Redis.from_url("redis://localhost:6379/0", socket_timeout=5)
+    redis = Redis.from_url("redis://redis:6379/0", socket_timeout=5)
     if not await redis.ping():
         logging.info("failed connection to redis")
         return
