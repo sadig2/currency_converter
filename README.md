@@ -32,6 +32,15 @@ chmod +x deploy.sh
 
 
 
+# Credentials to api
+
+username: sadig
+password: qwerty
+
+1. of course one can create new user with /api/authenticate/register endpoint
+2. create wallet for this user -> /api/wallet
+2. add currency to this wallet -> /api/currency
+
 
 # Workflow 
 
