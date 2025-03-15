@@ -2,12 +2,13 @@ from decimal import ROUND_HALF_UP
 from decimal import Decimal
 import json
 from locale import currency
+from math import log
 from fastapi import HTTPException, status, Form
-from jwt.exceptions import InvalidTokenError
 from typing import List
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends
 from core.models import User
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import UniqueConstraint, select
 from core.models import db_helper
@@ -45,6 +46,11 @@ class CurrencyResponse(BaseModel):
     amount: Decimal
 
 
+class Converted(BaseModel):
+    currencies: List[CurrencyResponse]
+    sum: Decimal
+
+
 @router.post("/wallet", response_model=WalletResponse)
 async def create_wallet_endpoint(
     wallet: WalletCreate,
@@ -55,12 +61,49 @@ async def create_wallet_endpoint(
     try:
 
         wallet = await create_wallet(session=db, user_id=user.id, name=wallet.name)
-    except UniqueConstraint as e:
+
+    except IntegrityError:
         logging.error("can't create wallet with same name ")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="can't create"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="can't create wallet because of unique constraints",
         )
     return wallet
+
+
+@router.put("/wallet/{wallet_id}", response_model=WalletResponse)
+async def update_wallet_endpoint(
+    wallet_id: int,
+    wallet_data: WalletCreate,
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    user: UserCreate = Depends(get_current_auth_user),
+):
+    try:
+        result = await db.execute(
+            select(Wallet).filter(
+                Wallet.id == wallet_id,
+                Wallet.user_id == user.id,
+            )
+        )
+        wallet = result.scalar_one_or_none()
+
+        if not wallet:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found"
+            )
+
+        wallet.name = wallet_data.name
+        await db.commit()
+        await db.refresh(wallet)
+        return wallet
+
+    except IntegrityError as e:
+        await db.rollback()
+        logging.error(f"Wallet update error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Wallet name must be unique for this user",
+        )
 
 
 @router.post("/currency", response_model=CurrencyResponse)
@@ -83,6 +126,72 @@ async def create_currency_endpoint(
         amount=currency.amount,
     )
     return currency
+
+
+@router.get("/currencies", response_model=List[CurrencyResponse])
+async def get_wallets_by_username(
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    payload: dict = Depends(get_current_token_payload),
+    current_user: UserCreate = Depends(get_current_auth_user),
+):
+    result = await db.execute(
+        select(Wallet)
+        .options(selectinload(Wallet.currencies))
+        .where(Wallet.user_id == current_user.id)
+    )
+    wallets = result.scalars().all()
+    all_currencies = []
+    for wallet in wallets:
+        all_currencies.extend(wallet.currencies)
+
+    return all_currencies
+
+
+async def get_mid_rates():
+    redis = Redis.from_url("redis://localhost:6379/0", socket_timeout=5)
+    if not await redis.ping():
+        logging.info("failed connection to redis")
+        return
+
+    rates = await redis.hgetall("mids")
+    # logging.info(rates)
+
+    normal_dict = {
+        key.decode(): json.loads(value.decode()) for key, value in rates.items()
+    }
+    return normal_dict
+
+
+@router.get("/currencies_converted", response_model=Converted)
+async def get_wallets_by_username(
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    payload: dict = Depends(get_current_token_payload),
+    current_user: UserCreate = Depends(get_current_auth_user),
+):
+    result = await db.execute(
+        select(Wallet)
+        .options(selectinload(Wallet.currencies))
+        .where(Wallet.user_id == current_user.id)
+    )
+    rates = await get_mid_rates()
+
+    wallets = result.scalars().all()
+    new_currencies = []
+    result_sum = Decimal(0)
+    for wallet in wallets:
+        for cur in wallet.currencies:
+            ratio = rates.get(cur.label.upper())
+            new_amount = Decimal(ratio) * cur.amount
+            new_amount_rounded = Decimal(new_amount).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+            new_cur = CurrencyResponse(amount=new_amount_rounded, label="PLN")
+            new_currencies.append(new_cur)
+            result_sum += new_amount
+            rounded_value = Decimal(result_sum).quantize(
+                Decimal("0.01"), rounding=ROUND_HALF_UP
+            )
+    return Converted(sum=rounded_value, currencies=new_currencies)
 
 
 @router.get("/wallets", response_model=List[WalletResponse])
@@ -135,9 +244,7 @@ async def get_rates():
     return normal_dict
 
 
-@router.get(
-    "/wallets/{wallet_name}/currencies_converted", response_model=List[CurrencyResponse]
-)
+@router.get("/wallets/{wallet_name}/currencies_converted", response_model=Converted)
 async def get_currencies_by_wallet_id_convert(
     wallet_name: str,
     db: AsyncSession = Depends(db_helper.get_session_getter),
@@ -156,6 +263,7 @@ async def get_currencies_by_wallet_id_convert(
         raise HTTPException(status_code=404, detail="wallet not found")
 
     rates = await get_rates()
+    result_sum = Decimal(0)
     converted_currencies = []
     for cur in wallet.currencies:
         conversion_rate = rates.get(cur.label.upper()).get("ask")
@@ -165,38 +273,7 @@ async def get_currencies_by_wallet_id_convert(
         rounded_value = Decimal(result).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
+        result_sum += rounded_value
         new_cur = CurrencyResponse(label="PLN", amount=rounded_value)
         converted_currencies.append(new_cur)
-    return converted_currencies
-
-
-# Currency Endpoints
-# --------------------------------------------------
-
-
-# @router.get("/users/{username}/currencies", response_model=List[CurrencyResponse])
-# async def get_user_currencies(
-#     username: str, db: AsyncSession = Depends(db_helper.get_session_getter)
-# ):
-#     # Get user with wallets and their currencies
-#     stmt = (
-#         select(User)
-#         .options(selectinload(User.wallets).selectinload(Wallet.currencies))
-#         .where(User.username == username)
-#     )
-#     result = await db.execute(stmt)
-#     user = result.scalar_one_or_none()
-
-#     print([[cur for cur in wallet.currencies] for wallet in user.wallets], "here")
-
-#     if not user:
-#         raise HTTPException(status_code=404, detail="User not found")
-
-#     # Extract unique currencies using dictionary comprehension
-#     return list(
-#         {
-#             currency.id: currency
-#             for wallet in user.wallets
-#             for currency in [wallet.currencies]
-#         }.values()
-#     )
+    return Converted(currencies=converted_currencies, sum=result_sum)
