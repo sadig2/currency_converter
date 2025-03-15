@@ -10,3 +10,9 @@ genpriv:
 
 genpub:
 	openssl rsa -pubout -in private.pem -out public.pem
+
+force:
+	docker compose up --build --force-recreate
+
+get_redis_key:
+	docker exec -it fastapi-app-redis redis-cli HGET trade USD

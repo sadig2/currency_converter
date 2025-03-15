@@ -30,6 +30,7 @@ celery_app.conf.update(
     accept_content=["json"],
     result_serializer="json",
     timezone="UTC",
+    result_expires=3600,  # Expire task results in 1 hour
     enable_utc=True,
     beat_schedule={
         "money": {

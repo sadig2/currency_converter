@@ -15,3 +15,13 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+
+# Copy the entrypoint script into the container
+
+# Make the script executable
+
+# Use the script as the entry point for the container
+ENTRYPOINT ["/entrypoint.sh"]
