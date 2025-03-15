@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-from sqlalchemy import ForeignKey, Integer, String, Numeric
+from sqlalchemy import ForeignKey, Integer, String, Numeric, UniqueConstraint
 from decimal import Decimal
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from sqlalchemy.orm import Mapped, mapped_column
@@ -21,3 +21,4 @@ class Wallet(Base):
     currencies: Mapped[list["Currency"]] = relationship(
         "Currency", back_populates="wallet", cascade="all, delete-orphan"
     )
+    __table_args__ = (UniqueConstraint("user_id", "name", name="_user_wallet_name_uc"),)

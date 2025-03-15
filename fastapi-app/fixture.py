@@ -2,6 +2,7 @@ import asyncio
 from decimal import Decimal
 from auth.utils import hash_password
 from sqlalchemy import delete
+import logging
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,10 +53,18 @@ async def main():
         )
 
         wallet1 = await create_wallet(session, user_id=user1.id, name="lucky_wallet")
-        wallet2 = await create_wallet(session, user_id=user2.id, name="bad_days")
+        wallet2 = await create_wallet(session, user_id=user1.id, name="bd")
+        wallet3 = await create_wallet(session, user_id=user2.id, name="bad_days")
+        wallet4 = await create_wallet(session, user_id=user2.id, name="bd")
 
-        await create_currency(session, wallet_id=wallet1.id, label="usd", amount=345.3)
-        await create_currency(session, wallet_id=wallet2.id, label="eur", amount=533.2)
+        await create_currency(session, wallet_id=wallet1.id, label="usd", amount=245.3)
+        await create_currency(session, wallet_id=wallet1.id, label="eur", amount=600)
+        await create_currency(session, wallet_id=wallet2.id, label="usd", amount=945.3)
+        await create_currency(session, wallet_id=wallet2.id, label="eur", amount=800)
+        await create_currency(session, wallet_id=wallet3.id, label="usd", amount=345.3)
+        await create_currency(session, wallet_id=wallet3.id, label="eur", amount=300)
+        await create_currency(session, wallet_id=wallet4.id, label="eur", amount=533.2)
+        await create_currency(session, wallet_id=wallet4.id, label="usd", amount=400.2)
 
         # print(wallet1.currencies)
 

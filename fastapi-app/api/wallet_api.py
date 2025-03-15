@@ -6,24 +6,26 @@ from fastapi import HTTPException, status, Form
 from jwt.exceptions import InvalidTokenError
 from typing import List
 from pydantic import BaseModel
-from fastapi.security import OAuth2PasswordBearer
 from fastapi import APIRouter, Depends
 from core.models import User
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import UniqueConstraint, select
 from core.models import db_helper
 from .auth_endpoint.auth import UserCreate
 from sqlalchemy.orm import selectinload
 from crud.wallet import create_currency, create_wallet
-from .auth_endpoint.auth import get_current_token_payload, get_current_auth_user
+from .auth_endpoint.auth import get_current_token_payload
 from redis.asyncio import Redis
+from .auth_endpoint.auth import UserCreate, get_current_auth_user
 
+import logging
 from core.models import Wallet, Currency
 
 router = APIRouter(prefix="", tags=["wallet"])
 
 
 class WalletResponse(BaseModel):
+    user_id: int
     name: str
     id: int
 
@@ -36,7 +38,6 @@ class CurrencyCreate(BaseModel):
 
 class WalletCreate(BaseModel):
     name: str
-    user_id: int
 
 
 class CurrencyResponse(BaseModel):
@@ -51,13 +52,14 @@ async def create_wallet_endpoint(
     payload: dict = Depends(get_current_token_payload),
     user: UserCreate = Depends(get_current_auth_user),
 ):
-    stmt = await db.execute(select(User).where(User.id == wallet.user_id))
-    user = stmt.scalar_one_or_none()
-    if not user:
+    try:
+
+        wallet = await create_wallet(session=db, user_id=user.id, name=wallet.name)
+    except UniqueConstraint as e:
+        logging.error("can't create wallet with same name ")
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="no such user"
+            status_code=status.HTTP_400_BAD_REQUEST, detail="can't create"
         )
-    wallet = await create_wallet(session=db, user_id=wallet.user_id, name=wallet.name)
     return wallet
 
 
@@ -80,21 +82,19 @@ async def create_currency_endpoint(
         label=currency.label,
         amount=currency.amount,
     )
-    print(currency)
     return currency
 
 
-@router.get("/users/{username}/wallets", response_model=List[WalletResponse])
+@router.get("/wallets", response_model=List[WalletResponse])
 async def get_wallets_by_username(
-    username: str,
     db: AsyncSession = Depends(db_helper.get_session_getter),
     payload: dict = Depends(get_current_token_payload),
-    user: UserCreate = Depends(get_current_auth_user),
+    current_user: UserCreate = Depends(get_current_auth_user),
 ):
     result = await db.execute(
         select(User)
-        .where(User.username == username)
         .options(selectinload(User.wallets))
+        .where(User.id == current_user.id)
     )
     user = result.scalar_one_or_none()
     if not user:
@@ -111,8 +111,8 @@ async def get_currencies_by_wallet_id(
 ):
     result = await db.execute(
         select(Wallet)
-        .where(Wallet.name == wallet_name)
         .options(selectinload(Wallet.currencies))
+        .where(Wallet.name == wallet_name, Wallet.user_id == user.id)
     )
 
     wallet = result.scalar_one_or_none()
@@ -122,10 +122,9 @@ async def get_currencies_by_wallet_id(
 
 
 async def get_rates():
-    redis = Redis.from_url("redis://redis:6379/0", socket_timeout=5)
-    # Verify connection
+    redis = Redis.from_url("redis://localhost:6379/0", socket_timeout=5)
     if not await redis.ping():
-        print("Redis connection failed")
+        logging.info("failed connection to redis")
         return
 
     rates = await redis.hgetall("trade")
@@ -133,11 +132,7 @@ async def get_rates():
     normal_dict = {
         key.decode(): json.loads(value.decode()) for key, value in rates.items()
     }
-    print(normal_dict)
     return normal_dict
-
-
-from .auth_endpoint.auth import UserCreate, get_current_auth_user
 
 
 @router.get(
@@ -152,8 +147,8 @@ async def get_currencies_by_wallet_id_convert(
     # iat = payload.get("iat")
     result = await db.execute(
         select(Wallet)
-        .where(Wallet.name == wallet_name)
         .options(selectinload(Wallet.currencies))
+        .where(Wallet.name == wallet_name, Wallet.user_id == user.id)
     )
 
     wallet = result.scalar_one_or_none()

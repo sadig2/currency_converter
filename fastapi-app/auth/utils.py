@@ -17,7 +17,6 @@ def encode_jwt(
         expire = now + expire_time_delta
     else:
         expire = now + timedelta(minutes=expire_minutes)
-    print(expire, "expire")
     to_encode.update({"exp": expire, "iat": now})
     encoded = jwt.encode(to_encode, private_key, algorithm)
     return encoded
@@ -29,7 +28,6 @@ def decode_jwt(
     algorithm: str = settings.auth_jwt.algorithm,
 ):
     decoded = jwt.decode(token, public_key, algorithms=[algorithm])
-    print("decoded ", decoded)
     return decoded
 
 

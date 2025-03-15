@@ -119,7 +119,6 @@ async def get_current_auth_user(
     db: AsyncSession = Depends(db_helper.get_session_getter),
 ) -> UserCreate:
     username: str | None = payload.get("username")
-    print(payload, "in payload")
     db_user = await get_user_by_username(db, username=username)
     if db_user:
         return db_user
