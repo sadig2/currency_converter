@@ -16,3 +16,6 @@ force:
 
 get_redis_key:
 	docker exec -it fastapi-app-redis redis-cli HGET trade USD
+
+drop:
+	docker-compose exec db psql -U clanzu -d clanzu_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"

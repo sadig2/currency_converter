@@ -11,17 +11,13 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy entrypoint first to leverage Docker cache
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+COPY . .
 
-
-# Copy the entrypoint script into the container
-
-# Make the script executable
-
-# Use the script as the entry point for the container
 ENTRYPOINT ["/entrypoint.sh"]
