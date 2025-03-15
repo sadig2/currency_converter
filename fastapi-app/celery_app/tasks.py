@@ -4,7 +4,7 @@ import httpx
 from celery import Celery
 from .worker import celery_app
 import json
-
+from core.config import settings
 
 @celery_app.task
 def sync():
@@ -42,7 +42,7 @@ async def update_exchange_rates():
             for rate in trade
         }
 
-        redis = Redis.from_url("redis://redis:6379/0", socket_timeout=5)
+        redis = Redis.from_url(settings.REDIS_URL, socket_timeout=5)
 
         if not await redis.ping():
             return
