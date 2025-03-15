@@ -21,21 +21,17 @@ Our app uses jwt token for authentication and auhtorization - hence one can not 
 
 
     
-    ### How to run
 
 
-## Create public and private keys for authentication 
+# Deploy:
 
-make genpriv
-make genpub
+chmod +x deploy.sh
 
-# Create .env file (probably will just add to repository)
+./deploy.sh  - simply make this file executable
 
-# Run containers
 
-docker-compose up -d
 
-python fixture.py - prepopulates our db for starter interaction with the api.
+
 
 # Workflow 
 
