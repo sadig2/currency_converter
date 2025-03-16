@@ -39,7 +39,7 @@ services:
       - db
       - redis
     networks:
-      - monitoring  # All services must use the same network
+      - monitoring
   
   celery-worker:
     container_name: celery

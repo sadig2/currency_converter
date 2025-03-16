@@ -1,0 +1,8 @@
+global:
+  scrape_interval: 15s  # How often to scrape metrics
+
+scrape_configs:
+  - job_name: "fastapi"
+    metrics_path: "/metrics"  # Endpoint exposed by your FastAPI app
+    static_configs:
+      - targets: ["web:80"]  # Use Docker service name ("web" from compose file)
