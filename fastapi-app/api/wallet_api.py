@@ -132,7 +132,7 @@ async def create_currency_endpoint(
 
 
 @router.get("/currencies", response_model=List[CurrencyResponse])
-async def get_wallets_by_username(
+async def get_currencies(
     db: AsyncSession = Depends(db_helper.get_session_getter),
     payload: dict = Depends(get_current_token_payload),
     current_user: UserCreate = Depends(get_current_auth_user),
@@ -157,7 +157,6 @@ async def get_mid_rates():
         return
 
     rates = await redis.hgetall("mids")
-    # logging.info(rates)
 
     normal_dict = {
         key.decode(): json.loads(value.decode()) for key, value in rates.items()
@@ -166,7 +165,7 @@ async def get_mid_rates():
 
 
 @router.get("/currencies_converted", response_model=Converted)
-async def get_wallets_by_username(
+async def get_converted_currencies(
     db: AsyncSession = Depends(db_helper.get_session_getter),
     payload: dict = Depends(get_current_token_payload),
     current_user: UserCreate = Depends(get_current_auth_user),
@@ -201,7 +200,7 @@ async def get_wallets_by_username(
 
 
 @router.get("/wallets", response_model=List[WalletResponse])
-async def get_wallets_by_username(
+async def get_wallets(
     db: AsyncSession = Depends(db_helper.get_session_getter),
     payload: dict = Depends(get_current_token_payload),
     current_user: UserCreate = Depends(get_current_auth_user),
@@ -251,7 +250,7 @@ async def get_rates():
 
 
 @router.get("/wallets/{wallet_name}/currencies_converted", response_model=Converted)
-async def get_currencies_by_wallet_id_convert(
+async def get_converted_currencies_by_wallet_id(
     wallet_name: str,
     db: AsyncSession = Depends(db_helper.get_session_getter),
     payload: dict = Depends(get_current_token_payload),
