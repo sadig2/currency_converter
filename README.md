@@ -19,7 +19,6 @@ Our app uses jwt token for authentication and auhtorization - hence one can not 
 - **API**: The main API is built using FastAPI, and it fetches data from Redis as well as postgees (more static data) rather than directly from the bank-side APi. For database interaction it uses async sqlalchemy, for data validation - Pydantic.
 - **Celery**: We use Celery for scheduling background tasks that handle syncing data between Redis and the bank-side API.
 
-
     
 
 
@@ -30,6 +29,9 @@ chmod +x deploy.sh
 ./deploy.sh  - simply make this file executable
 
 
+# Stress testing - run locus with -> navigate to http://0.0.0.0:8089
+
+make locust
 
 
 # Credentials to api

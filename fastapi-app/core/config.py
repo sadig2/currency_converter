@@ -9,17 +9,11 @@ BASE_DIR = Path(__file__).parent.parent
 
 class RunConfig(BaseModel):
     host: str = "0.0.0.0"
-    port: int = 3000
-
-
-class ApiV1Prefix(BaseModel):
-    prefix: str = "/v1"
-    users: str = "/users"
+    port: int = 8000
 
 
 class ApiPrefix(BaseModel):
     prefix: str = "/api"
-    v1: ApiV1Prefix = ApiV1Prefix()
 
 
 class DatabaseConfig(BaseModel):
