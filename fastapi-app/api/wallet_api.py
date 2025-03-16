@@ -171,21 +171,15 @@ async def get_wallets_by_username(
     payload: dict = Depends(get_current_token_payload),
     current_user: UserCreate = Depends(get_current_auth_user),
 ):
-    result = await db.execute(
+
+    db_task = db.execute(
         select(Wallet)
         .options(selectinload(Wallet.currencies))
         .where(Wallet.user_id == current_user.id)
     )
-    rates = await get_mid_rates()
+    rates_task = get_mid_rates()
 
-    # db_task = db.execute(
-    #     select(Wallet)
-    #     .options(selectinload(Wallet.currencies))
-    #     .where(Wallet.user_id == current_user.id)
-    # )
-    # rates_task = get_mid_rates()
-
-    # result, rates = await asyncio.gather(db_task, rates_task)
+    result, rates = await asyncio.gather(db_task, rates_task)
 
     wallets = result.scalars().all()
     new_currencies = []
