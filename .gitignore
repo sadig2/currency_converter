@@ -2,6 +2,8 @@ private.pem
 public.pem
 
 
+celerybeat-schedule-*
+
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
