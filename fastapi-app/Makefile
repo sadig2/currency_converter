@@ -19,3 +19,6 @@ get_redis_key:
 
 drop:
 	docker-compose exec db psql -U clanzu -d clanzu_db -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"
+
+locust:
+	rm -rf env && python3 -m venv env && source env/bin/activate && pip install locust && cd ../locust && locust -f locust.py --host http://0.0.0.0:8000
