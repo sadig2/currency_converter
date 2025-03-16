@@ -1,3 +1,4 @@
+import asyncio
 from decimal import ROUND_HALF_UP
 from decimal import Decimal
 import json
@@ -176,6 +177,15 @@ async def get_wallets_by_username(
         .where(Wallet.user_id == current_user.id)
     )
     rates = await get_mid_rates()
+
+    # db_task = db.execute(
+    #     select(Wallet)
+    #     .options(selectinload(Wallet.currencies))
+    #     .where(Wallet.user_id == current_user.id)
+    # )
+    # rates_task = get_mid_rates()
+
+    # result, rates = await asyncio.gather(db_task, rates_task)
 
     wallets = result.scalars().all()
     new_currencies = []

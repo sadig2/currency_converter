@@ -45,3 +45,4 @@ watchfiles==1.0.4
 httpx
 celery[redis]
 redis
+prometheus-client
