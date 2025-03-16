@@ -44,7 +44,12 @@ class WalletCreate(BaseModel):
 
 
 class CurrencyResponse(BaseModel):
+    id: int
     label: str
+    amount: Decimal
+
+
+class CurrencyAmount(BaseModel):
     amount: Decimal
 
 
@@ -71,6 +76,48 @@ async def create_wallet_endpoint(
             detail="can't create wallet because of unique constraints",
         )
     return wallet
+
+
+@router.patch(
+    "/currency/add_or_withdraw_funds/{currency_id}", response_model=CurrencyResponse
+)
+async def update_currency_amount(
+    currency_id: int,
+    currency_data: CurrencyAmount,
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+    user: UserCreate = Depends(get_current_auth_user),
+):
+    try:
+        result = await db.execute(
+            select(Currency)
+            .join(Wallet, Currency.wallet_id == Wallet.id)
+            .filter(Currency.id == currency_id, Wallet.user_id == user.id)
+            .with_for_update()
+        )
+        currency = result.scalar_one_or_none()
+
+        if not currency:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, detail="Wallet not found"
+            )
+
+        if currency_data.amount < 0 and abs(currency_data.amount) > currency.amount:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Not enough funds",
+            )
+        currency.amount += currency_data.amount
+        await db.commit()
+        await db.refresh(currency)
+        return currency
+
+    except IntegrityError as e:
+        await db.rollback()
+        logging.error(f"Currency update error: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Db constrains violation",
+        )
 
 
 @router.put("/wallet/{wallet_id}", response_model=WalletResponse)
