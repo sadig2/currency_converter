@@ -46,17 +46,19 @@ password: qwerty
 
 
 
-/docs - for swagger
+**/docs** - to access swagger
 
-/api/authenticate/login - to login to the app , to authenticate the user
+**/api/authenticate/login** - to login to the app , to authenticate the user
 
-/api/wallets/{wallet_name}/currencies_converted - will fetch currencies of specific  wallet of user and convert them all to pln and return the sum with list of new currencies
+**/api/wallets/{wallet_name}/currencies_converted** - to fetch converted currencies and sum of specific wallet of an active  user
 
-/api/currencies_convertes - will fetch all converted currencies of current active user and convert them all to pln and return the sum with list of new currencies
+**/api/currencies_convertes** - to fetch all converted currencies and their sum of current active user
 
-/api/wallet - will create new wallet (user can have 1 wallet with same name)
+**/api/wallet** - to create new wallet (user can have 1 wallet with same name)
 
-/api/wallet/{wallet_id} - will update wallet data
+**/api/wallet/{wallet_id}** - to update wallet data
+
+**/api/currency/add_or_withdraw_funds/{currency_id}** - to add or withdraw money from currency inside of wallet, by providing ID of currency and amount (negative for withdrawing , position for adding )
 
 
 
