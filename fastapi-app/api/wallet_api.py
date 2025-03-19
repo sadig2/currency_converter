@@ -237,7 +237,9 @@ async def get_converted_currencies(
             new_amount_rounded = Decimal(new_amount).quantize(
                 Decimal("0.01"), rounding=ROUND_HALF_UP
             )
-            new_cur = CurrencyResponse(amount=new_amount_rounded, label="PLN")
+            new_cur = CurrencyResponse(
+                id=cur.id, amount=new_amount_rounded, label="PLN"
+            )
             new_currencies.append(new_cur)
             result_sum += new_amount
             rounded_value = Decimal(result_sum).quantize(
@@ -326,6 +328,6 @@ async def get_converted_currencies_by_wallet_id(
             Decimal("0.01"), rounding=ROUND_HALF_UP
         )
         result_sum += rounded_value
-        new_cur = CurrencyResponse(label="PLN", amount=rounded_value)
+        new_cur = CurrencyResponse(id=cur.id, label="PLN", amount=rounded_value)
         converted_currencies.append(new_cur)
     return Converted(currencies=converted_currencies, sum=result_sum)
