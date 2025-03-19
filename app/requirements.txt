@@ -46,3 +46,8 @@ httpx
 celery[redis]
 redis
 prometheus-client
+pytest 
+pytest-mock
+pytest-asyncio
+python-dotenv 
+pytest-dotenv  

@@ -1,3 +1,4 @@
+cd fastapi-app
 make genpriv
 make genpub
 

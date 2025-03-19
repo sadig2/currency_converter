@@ -9,7 +9,8 @@ RUN apt-get update && apt-get install -y \
     gcc \
     python3-dev \
     libpq-dev \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/*\
+    cd
 
 # Copy entrypoint first to leverage Docker cache
 

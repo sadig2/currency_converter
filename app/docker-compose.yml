@@ -45,31 +45,32 @@ services:
     ports:
       - "8000:8000"
     env_file:
-      - .env
+      - src/.env
 
     depends_on:
       db:
         condition: service_healthy
       redis:
         condition: service_healthy 
-      celery-worker:
+      celery:
         condition: service_healthy 
     networks:
       - monitoring
       
   
-  celery-worker:
+  celery:
     container_name: celery
     volumes:
       - .:/app
     build: .
+    working_dir: /app/src
     command: celery -A celery_app worker --beat --loglevel=info
     environment:
       REDIS_URL: "redis://redis:6379/0"
     depends_on:
       redis:
         condition: service_healthy 
-    user: "1000:1000"
+    # user: "1000:1000"
     networks:
       - monitoring 
     healthcheck:
@@ -77,7 +78,7 @@ services:
       interval: 5s
       timeout: 10s
       retries: 5
-    restart: always
+    # restart: always
 
   prometheus:
     container_name: prometheus
