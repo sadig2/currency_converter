@@ -1,5 +1,11 @@
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import (
+    create_async_engine,
+    async_sessionmaker,
+    AsyncConnection,
+)
 from core.config import settings
+import contextlib
+from typing import Any, AsyncIterator
 
 
 class DatabaseHelper:
@@ -24,6 +30,18 @@ class DatabaseHelper:
             bind=self.engine, autoflush=False, expire_on_commit=False
         )
 
+    @contextlib.asynccontextmanager
+    async def connect(self) -> AsyncIterator[AsyncConnection]:
+        if self.engine is None:
+            raise Exception("DatabaseSessionManager is not initialized")
+
+        async with self.engine.begin() as connection:
+            try:
+                yield connection
+            except Exception:
+                await connection.rollback()
+                raise
+
     async def dispose(self):
         await self.engine.dispose()
 
@@ -40,3 +58,8 @@ db_helper = DatabaseHelper(
     max_overflow=settings.db.max_overflow,
     pool_size=settings.db.pool_size,
 )
+
+
+async def get_db_session():
+    async with db_helper.session_factory() as session:
+        yield session

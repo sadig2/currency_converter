@@ -51,3 +51,4 @@ pytest-mock
 pytest-asyncio
 python-dotenv 
 pytest-dotenv  
+aiosqlite

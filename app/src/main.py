@@ -4,7 +4,9 @@ from fastapi import FastAPI
 import logging
 from api import router as api_router
 from core.config import settings
-from core.models import db_helper, Base, User
+from core.models import db_helper
+
+# from core.models import db_helper, Base, User
 from prometheus_client import make_asgi_app, Histogram, Counter
 from fastapi import FastAPI, Request
 import time  # Added for proper timing

@@ -5,8 +5,6 @@ set -e
 # alembic downgrade base
 # alembic revision --autogenerate -m "create user table"
 
-# touch meow.txt
-pwd > xx.txt
 # cd src
 alembic upgrade head
 

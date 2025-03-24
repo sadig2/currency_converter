@@ -15,9 +15,49 @@ services:
       timeout: 5s
       retries: 5
 
+  test_db:
+      container_name: test_db
+      image: postgres
+      restart: always
+      environment:
+        POSTGRES_USER: test-user
+        POSTGRES_PASSWORD: password
+        POSTGRES_DB: test_db
+      ports:
+        - 5434:5432 # Use a different port to avoid conflicts with the main database
+      expose:
+        - "5434" # Exposing the different port for clarity
+      volumes:
+        - test_db_data:/var/lib/postgresql/data:cached
+      networks:
+        - monitoring 
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U test-user -d test_db"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
+
+
+  tests:
+      working_dir: /app
+      build: .
+      volumes:
+        - .:/app
+      command: 
+        - sh
+        - -c
+        - "PYTHONPATH=/app/src/. pytest /app/tests/"
+      environment:
+        - DATABASE_URL="postgresql+asyncpg://test-user:password@test_db:5432/test_db"
+      depends_on:
+        test_db:
+          condition: service_healthy
+      networks:
+        - monitoring 
+
+
   db:
     container_name: db
-
     image: postgres
     environment:
       POSTGRES_USER: clanzu
@@ -105,6 +145,7 @@ volumes:
   grafana_data:
   postgres_data:
   redis_data:
+  test_db_data:
 
 networks:
   monitoring:

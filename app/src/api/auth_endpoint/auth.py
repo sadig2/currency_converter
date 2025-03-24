@@ -1,7 +1,7 @@
 from fastapi import HTTPException, status, Form
 from jwt.exceptions import InvalidTokenError
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from fastapi.security import OAuth2PasswordBearer
 from fastapi import APIRouter, Depends
 from core.models import User
@@ -35,8 +35,7 @@ class UserResponse(BaseModel):
     username: str
     active: bool
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenInfo(BaseModel):

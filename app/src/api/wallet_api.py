@@ -59,6 +59,13 @@ class Converted(BaseModel):
     sum: Decimal
 
 
+@router.get("/test")
+async def get_test(
+    db: AsyncSession = Depends(db_helper.get_session_getter),
+):
+    return {"status": "ok"}
+
+
 @router.post("/wallet", response_model=WalletResponse)
 async def create_wallet_endpoint(
     wallet: WalletCreate,
